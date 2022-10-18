@@ -2,13 +2,22 @@ const express = require("express");
 const app = express();
 const { Todo } = require("./models");
 const bodyParser = require("body-parser");
+const path = require("path");
 app.use(bodyParser.json());
+app.set("view engine", "ejs");
 
-app.get("/", function (request, response) {
-  response.send("Hello World");
+app.get("/", async (request, response) => {
+  const allTodos = await Todo.getTodos();
+  if (request.accepts("html")) {
+    response.render("index", { allTodos });
+  } else {
+    response.json(allTodos);
+  }
 });
 
-app.get("/todos", async function (_request, response) {
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/todos", async function (request, response) {
   console.log("Processing list of all Todos ...");
   try {
     const todos = await Todo.findAll({
@@ -58,8 +67,7 @@ app.delete("/todos/:id", async function (request, response) {
     const todo = await Todo.findByPk(request.params.id);
     await todo.destroy();
     return response.send(true);
-  }
-  catch (error) {
+  } catch (error) {
     console.log(error);
     return response.send(false);
   }
