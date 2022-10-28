@@ -8,8 +8,22 @@ app.set("view engine", "ejs");
 
 app.get("/", async (request, response) => {
   const allTodos = await Todo.getTodos();
+  const overdueTodos = await allTodos.filter(
+    (todo) => todo.dueDate < new Date().toISOString()
+  );
+  const dueTodayTodos = await allTodos.filter(
+    (todo) => todo.dueDate === new Date().toISOString()
+  );
+  const dueLaterTodos = await allTodos.filter(
+    (todo) => todo.dueDate > new Date().toISOString()
+  );
   if (request.accepts("html")) {
-    response.render("index", { allTodos });
+    response.render("index", {
+      allTodos,
+      overdueTodos,
+      dueTodayTodos,
+      dueLaterTodos,
+    });
   } else {
     response.json(allTodos);
   }
