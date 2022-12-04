@@ -13,17 +13,10 @@ app.use(csrf("this_should_be_32_character_long", ["POST", "PUT", "DELETE"]));
 app.set("view engine", "ejs");
 
 app.get("/", async (request, response) => {
-  const allTodos = await Todo.getTodos();
-  const overdueTodos = await allTodos.filter(
-    (todo) => todo.dueDate < new Date().toISOString()
-  );
-  const dueTodayTodos = await allTodos.filter(
-    (todo) => todo.dueDate === new Date().toISOString()
-  );
-  const dueLaterTodos = await allTodos.filter(
-    (todo) => todo.dueDate > new Date().toISOString()
-  );
-  const completedTodos = await allTodos.filter((todo) => todo.completed);
+  const overdueTodos = await Todo.overdue();
+  const dueTodayTodos = await Todo.dueToday();
+  const dueLaterTodos = await Todo.dueLater();
+  const completedTodos = await Todo.completed();
   if (request.accepts("html")) {
     response.render("index", {
       overdueTodos,

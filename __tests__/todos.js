@@ -63,6 +63,20 @@ describe("Todo Application", function () {
 
     const parsedUpdateResponse = JSON.parse(markCompleteResponse.text);
     expect(parsedUpdateResponse.completed).toBe(true);
+
+    // mark the todo as incomplete
+    res = await agent.get("/");
+    csrfToken = extractCSRFToken(res.text);
+
+    const markIncompleteResponse = await agent
+      .put(`/todos/${lastItem.id}`)
+      .send({
+        _csrf: csrfToken,
+        completed: false,
+      });
+
+    const parsedIncompleteResponse = JSON.parse(markIncompleteResponse.text);
+    expect(parsedIncompleteResponse.completed).toBe(false);
   });
 
   test("Fetches all todos in the database using /todos endpoint", async () => {
@@ -82,7 +96,7 @@ describe("Todo Application", function () {
     expect(parsedResponse[2].title).toBe("Buy xbox");
   });
 
-  test("Deletes a todo with the given ID if it exists and sends a boolean response", async () => {
+  test("Deletes a todo with the given ID", async () => {
     let res = await agent.get("/");
     let csrfToken = extractCSRFToken(res.text);
 
@@ -104,5 +118,10 @@ describe("Todo Application", function () {
       _csrf: csrfToken,
     });
     expect(deleteResponse.statusCode).toBe(200);
+
+    const reresponse = await agent.get("/todos");
+    const reresponseParsed = JSON.parse(reresponse.text);
+    expect(reresponseParsed.length).toBe(parsedResponse.length - 1);
+    expect(reresponseParsed.find((todo) => todo.id === todoID)).toBe(undefined);
   });
 });
