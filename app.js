@@ -35,6 +35,12 @@ app.use(function (request, response, next) {
   next();
 });
 
+app.use(function (request, response, next) {
+  response.locals.user = request.user;
+  console.log(request.user);
+  next();
+});
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -81,7 +87,11 @@ passport.deserializeUser((id, done) => {
 app.set("view engine", "ejs");
 
 app.get("/", (req, res) => {
-  res.render("index", { csrfToken: req.csrfToken() });
+  if (req.user && req.user.id) {
+    res.redirect("/todos");
+  } else {
+    res.render("index", { csrfToken: req.csrfToken() });
+  }
 });
 
 app.get(
@@ -164,7 +174,10 @@ app.post("/users", async (request, response) => {
       response.redirect("/todos");
     });
   } catch (error) {
-    response.status(400).send(error);
+    error.errors.forEach((element) => {
+      request.flash("error", element.message);
+    });
+    response.redirect("signup");
   }
 });
 
@@ -204,7 +217,10 @@ app.post(
       await Todo.addTodo({ ...request.body, userId: request.user.id });
       return response.redirect("/todos");
     } catch (error) {
-      return response.status(422).json(error);
+      error.errors.forEach((element) => {
+        request.flash("error", element.message);
+      });
+      response.redirect("/todos");
     }
   }
 );

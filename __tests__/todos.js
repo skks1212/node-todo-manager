@@ -22,6 +22,11 @@ const login = async (agentt, email, password) => {
   return a;
 };
 
+const logout = async (agentt) => {
+  const res = await agentt.get("/signout");
+  return res;
+};
+
 describe("Todo Application", function () {
   beforeAll(async () => {
     await db.sequelize.sync({ force: true });
@@ -40,12 +45,22 @@ describe("Todo Application", function () {
 
   test("Sign up", async () => {
     let res = await agent.get("/login");
-    const csrfToken = extractCSRFToken(res.text);
+    let csrfToken = extractCSRFToken(res.text);
     res = await agent.post("/users").send({
       firstName: "John",
       lastName: "Doe",
       email: "johndoe@example.com",
       password: "password",
+      _csrf: csrfToken,
+    });
+    expect(res.statusCode).toBe(302);
+    res = await agent.get("/login");
+    csrfToken = extractCSRFToken(res.text);
+    res = await agent.post("/users").send({
+      firstName: "Foo",
+      lastName: "Bar",
+      email: "foobar@example.com",
+      password: "foobar",
       _csrf: csrfToken,
     });
     expect(res.statusCode).toBe(302);
@@ -176,5 +191,32 @@ describe("Todo Application", function () {
     const reresponseParsed = JSON.parse(reresponse.text);
     expect(reresponseParsed.length).toBe(parsedResponse.length - 1);
     expect(reresponseParsed.find((todo) => todo.id === todoID)).toBe(undefined);
+  });
+
+  test("Check if User A can access User B's todos", async () => {
+    const agent = request.agent(server);
+    await login(agent, "johndoe@example.com", "password");
+    let res = await agent.get("/todos");
+    let csrfToken = extractCSRFToken(res.text);
+
+    await agent.post("/todos").send({
+      title: "John Doe's todo",
+      dueDate: new Date().toISOString(),
+      _csrf: csrfToken,
+    });
+
+    const response = await agent.get("/alltodos");
+    const parsedResponse = JSON.parse(response.text);
+    const todoID = parsedResponse[parsedResponse.length - 1].id;
+
+    await logout(agent);
+    await login(agent, "foobar@example.com", "foobar");
+    res = await agent.get("/todos");
+    csrfToken = extractCSRFToken(res.text);
+
+    const accessResponse = await agent.get(`/alltodos`);
+    const accessParsedResponse = JSON.parse(accessResponse.text);
+    const todo = accessParsedResponse.find((todo) => todo.id === todoID);
+    expect(todo).toBe(undefined);
   });
 });
