@@ -102,13 +102,22 @@ describe("Todo Application", function () {
 
     const parsedUpdateResponse = JSON.parse(markCompleteResponse.text);
     expect(parsedUpdateResponse.completed).toBe(true);
+  });
 
-    // mark the todo as incomplete
-    res = await agent.get("/todos");
-    csrfToken = extractCSRFToken(res.text);
+  test("Marks a todo with the given ID as incomplete", async () => {
+    const agent = request.agent(server);
+    await login(agent, "johndoe@example.com", "password");
+    const groupedTodos = await agent
+      .get("/alltodos")
+      .set("Accept", "application/json");
+    const parsedResponse = JSON.parse(groupedTodos.text);
+    const completeItem = parsedResponse.find((item) => item.completed === true);
+
+    const res = await agent.get("/todos");
+    const csrfToken = extractCSRFToken(res.text);
 
     const markIncompleteResponse = await agent
-      .put(`/todos/${lastItem.id}`)
+      .put(`/todos/${completeItem.id}`)
       .send({
         _csrf: csrfToken,
         completed: false,
