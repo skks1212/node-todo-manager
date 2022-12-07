@@ -8,62 +8,84 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      Todo.belongsTo(models.User, {
+        foreignKey: "userId",
+      });
     }
 
-    static addTodo({ title, dueDate }) {
-      return this.create({ title: title, dueDate: dueDate, completed: false });
+    static addTodo({ title, dueDate, userId }) {
+      return this.create({
+        title: title,
+        dueDate: dueDate,
+        completed: false,
+        userId,
+      });
     }
 
-    static getTodos() {
+    static getTodos(userId) {
       return this.findAll({
         order: [["id", "ASC"]],
+        where: {
+          userId,
+        },
       });
     }
 
-    static overdue() {
+    static overdue(userId) {
       return this.findAll({
         where: {
+          userId,
           completed: false,
           dueDate: {
-            [Op.lt]: new Date().toISOString(),
+            [Op.lt]: new Date(),
           },
         },
       });
     }
 
-    static dueToday() {
+    static dueToday(userId) {
       return this.findAll({
         where: {
+          userId,
           completed: false,
           dueDate: {
-            [Op.eq]: new Date().toISOString(),
+            [Op.eq]: new Date(),
           },
         },
       });
     }
 
-    static dueLater() {
+    static dueLater(userId) {
       return this.findAll({
         where: {
+          userId,
           completed: false,
           dueDate: {
-            [Op.gt]: new Date().toISOString(),
+            [Op.gt]: new Date(),
           },
         },
       });
     }
 
-    static completed() {
+    static completed(userId) {
       return this.findAll({
         where: {
+          userId,
           completed: true,
         },
       });
     }
 
-    setCompletionStatus(completed) {
-      return this.update({ completed });
+    static async remove(userId) {
+      return this.destroy({
+        where: {
+          userId,
+        },
+      });
+    }
+
+    setCompletionStatus(completed, userId) {
+      return this.update({ completed }, { where: { id: this.id, userId } });
     }
   }
   Todo.init(

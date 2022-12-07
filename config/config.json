@@ -2,6 +2,7 @@
   "development": {
     "username": "shivank",
     "password": "password",
+    "logging": false,
     "database": "wd-todo-dev",
     "host": "127.0.0.1",
     "dialect": "postgres"
