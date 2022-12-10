@@ -9,6 +9,7 @@
   <title>Document</title>
   <link rel="stylesheet" href="./css/styles.css" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/tailcombinator.js"></script>
   <script>
     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const updateTodoStatus = (id, completed) => {
@@ -46,19 +47,23 @@
 
 <body>
   <div class="flex justify-center">
-    <div>
+    <div class="w-[300px]">
       <%- include('header.ejs') %>
         <p>
-          Welcome to the Todo App!
+          Welcome to my Todo App!
         </p>
-        <p>
-          Signup : <a href="/signup">Signup</a>
-        </p>
-        <p>
-          Login : <a href="/login">Login</a>
-        </p>
+        <a class="login-button" href="/signup">Signup</a>
+        <div class="text-center">
+          or
+        </div>
+        <a class="login-button" href="/login">Login</a>
     </div>
+
   </div>
+  <script>
+    tc.c(".login-button", "bg-green-600 rounded p-2 block w-full text-white hover:bg-green-700 transition mt-2 w-full text-center");
+  </script>
+
 </body>
 
 </html>
