@@ -76,16 +76,22 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
 
-    static async remove(userId) {
-      return this.destroy({
-        where: {
-          userId,
-        },
-      });
+    removeTodo(userId) {
+      if (this.userId === userId) {
+        return this.destroy();
+      } else {
+        throw new Error("Unauthorized");
+      }
     }
 
     setCompletionStatus(completed, userId) {
-      return this.update({ completed }, { where: { id: this.id, userId } });
+      if (this.userId === userId) {
+        return this.update({
+          completed,
+        });
+      } else {
+        throw new Error("Unauthorized");
+      }
     }
   }
   Todo.init(

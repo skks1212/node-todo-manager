@@ -35,12 +35,6 @@ app.use(function (request, response, next) {
   next();
 });
 
-app.use(function (request, response, next) {
-  response.locals.user = request.user;
-  console.log(request.user);
-  next();
-});
-
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -109,6 +103,7 @@ app.get(
         dueTodayTodos,
         dueLaterTodos,
         completedTodos,
+        user: request.user,
         csrfToken: request.csrfToken(),
       });
     } else {
@@ -232,10 +227,13 @@ app.put(
     const todo = await Todo.findByPk(request.params.id);
     const completed = request.body.completed;
     try {
-      const updatedTodo = await todo.setCompletionStatus(completed === true);
+      const updatedTodo = await todo.setCompletionStatus(
+        completed === true,
+        request.user.id
+      );
       return response.json(updatedTodo);
     } catch (error) {
-      return response.status(422).json(error);
+      return response.status(404).json(error);
     }
   }
 );
@@ -246,10 +244,10 @@ app.delete(
   async function (request, response) {
     try {
       const todo = await Todo.findByPk(request.params.id);
-      await todo.destroy({ where: { userId: request.user.id } });
+      await todo.removeTodo(request.user.id);
       return response.json({ success: true });
     } catch (error) {
-      return response.status(422).json({ success: false });
+      return response.status(404).json({ success: false });
     }
   }
 );

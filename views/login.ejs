@@ -21,7 +21,7 @@
                 <h6>
                     Login to your account
                 </h6>
-                <form action="/session" method="post" class="">
+                <form action="/session" method="post" class="min-w-[300px]">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <input type="text" name="email" placeholder="Email" class="w-full" />
                     <input type="password" name="password" placeholder="Password" class="w-full" />
@@ -37,6 +37,10 @@
                         </li>
                         <% } %>
                             <% } %>
+                                <div class="text-center mt-6">
+                                    or <a href="/signup" class="text-green-600 hover:text-green-700 transition">Sign
+                                        up</a>
+                                </div>
         </div>
 
     </div>

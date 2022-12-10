@@ -5,6 +5,8 @@ const app = require("../app");
 
 let server, agent;
 
+let globalTodoId = 0;
+
 const extractCSRFToken = (html) => {
   const $ = cheerio.load(html);
   return $("[name=_csrf]").val();
@@ -208,6 +210,7 @@ describe("Todo Application", function () {
     const response = await agent.get("/alltodos");
     const parsedResponse = JSON.parse(response.text);
     const todoID = parsedResponse[parsedResponse.length - 1].id;
+    globalTodoId = todoID;
 
     await logout(agent);
     await login(agent, "foobar@example.com", "foobar");
@@ -218,5 +221,34 @@ describe("Todo Application", function () {
     const accessParsedResponse = JSON.parse(accessResponse.text);
     const todo = accessParsedResponse.find((todo) => todo.id === todoID);
     expect(todo).toBe(undefined);
+  });
+  test("Check if User A can mark User B's todos as complete", async () => {
+    const agent = request.agent(server);
+    await login(agent, "foobar@example.com", "foobar");
+    const todoID = globalTodoId;
+
+    let res = await agent.get("/todos");
+    let csrfToken = extractCSRFToken(res.text);
+
+    const updateTodo = await agent.put(`/todos/${todoID}`).send({
+      _csrf: csrfToken,
+      completed: true,
+    });
+
+    expect(updateTodo.statusCode).toBe(404);
+  });
+  test("Check if User A can delete User B's todos", async () => {
+    const agent = request.agent(server);
+    await login(agent, "foobar@example.com", "foobar");
+    const todoID = globalTodoId;
+
+    let res = await agent.get("/todos");
+    let csrfToken = extractCSRFToken(res.text);
+
+    const deleteTodo = await agent.delete(`/todos/${todoID}`).send({
+      _csrf: csrfToken,
+    });
+
+    expect(deleteTodo.statusCode).toBe(404);
   });
 });
